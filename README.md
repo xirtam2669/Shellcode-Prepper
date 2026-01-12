@@ -6,7 +6,7 @@ A simple python script to obsucate or encrypt shellcode, in preperation for late
 Currently, RC4 and AES encryption is available for .bin files. 
 
 ## Setup
-```
+```bash
 ##Create virtual environment
 ┌──(root㉿c2)-[~/helper-scripts/Shellcode-Prepper]
 └─# python3 -m venv .venv
