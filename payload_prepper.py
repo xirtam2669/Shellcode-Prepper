@@ -68,7 +68,7 @@ def main():
     # Key handling
     match args.key:
         case "" | None:
-            key = b'1234567890123456'
+            key = bytes([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F])
         case _:
             key = args.key.encode()
 
@@ -82,8 +82,10 @@ def main():
             shellcode = f.read()
 
         if alg == "rc4":
-            ciphertext = rc4(shellcode, key)
-
+            ciphertext = rc4(key, shellcode)
+            plaintext = rc4(key, ciphertext)
+            if plaintext != shellcode:
+                print("Round trip test failed")
         if alg == "aes":
             ciphertext = aes(key, iv, shellcode)
 
@@ -124,6 +126,24 @@ def rc4(key: bytes, data: bytes) -> bytes:
         out.append(byte ^ k)
 
     return bytes(out)
+
+def rc4_debug_verify(key: bytes, original: bytes) -> bool:
+    """
+    Encrypts then decrypts data and verifies byte-for-byte equality.
+    Returns True if identical, False otherwise.
+    """
+    encrypted = rc4_crypt(key, original)
+    decrypted = rc4_crypt(key, encrypted)
+
+    if decrypted != original:
+        for i, (a, b) in enumerate(zip(original, decrypted)):
+            if a != b:
+                print(f"[!] RC4 mismatch at offset {i}: {a:#02x} != {b:#02x}")
+                break
+        return False
+
+    print("[+] RC4 debug OK: decrypted data matches original")
+    return True
 
 def aes(key, iv, shellcode):
     """Encrypts shellcode using AES encryption in CBC mode.
